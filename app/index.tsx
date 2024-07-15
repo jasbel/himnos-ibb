@@ -1,4 +1,5 @@
-import { Image, StyleSheet, Platform, FlatList } from "react-native";
+import { Link, Stack, useNavigation, useRouter } from "expo-router";
+import { StyleSheet, Text, FlatList } from "react-native";
 
 import { ThemedView } from "@/components/ThemedView";
 import FavoriteScreen from "@/components/favorite/FavoriteScreen";
@@ -11,10 +12,11 @@ import Storage from "@/libs/storage";
 import { removeAccents } from "@/res/removeAccents";
 import { Songs } from "@/types/types";
 
-export default function HomeScreen(props: { navigation: any }) {
+export default function HimnosScreen(props: { navigation: any }) {
   const data = songs;
 
-  const { navigation } = props;
+  // const  navigation = useRouter();
+  const navigation = useNavigation();
   const [dataSearch, setDataSearch] = useState(songs);
   const [noFavoritesData, setNoFavoriteData] = useState<Songs[]>(songs);
   const [favorites, setFavorites] = useState([] as any);
@@ -42,7 +44,16 @@ export default function HomeScreen(props: { navigation: any }) {
   };
 
   const handlePress = (himno: Songs) => {
-    props.navigation.navigate("himno", { himno });
+    // navigation.setParams({himno: `${himno}`});
+    /* @ts-ignore */
+    navigation.navigate({
+      name: "himno",
+      params: {
+        himno: himno,
+        himnoStr: JSON.stringify(himno),
+      },
+    });
+    // navigation.navigate('details', { itemId: 42, otherParam: 'anything you want here' })
     setModeSearch(false);
   };
 
@@ -86,6 +97,21 @@ export default function HomeScreen(props: { navigation: any }) {
 
   return (
     <ThemedView style={styles.container}>
+      <Stack.Screen
+        options={{
+          title: "My home",
+          headerStyle: { backgroundColor: "#f4511e" },
+          headerTintColor: "#fff",
+          headerTitleStyle: {
+            fontWeight: "bold",
+          },
+
+          headerTitle: props => <Text>Canticos</Text>,
+        }}
+      />
+
+      <Link href={{ pathname: "himno", params: { name: "Bacon" } }}>Go to Details</Link>
+
       <HimnoSearch onChange={handleSearch} modeSearch={modeSearch} />
 
       <FlatList
@@ -109,6 +135,8 @@ export default function HomeScreen(props: { navigation: any }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: Colors.bkgWhite,
     paddingLeft: 12,
     paddingRight: 12,
