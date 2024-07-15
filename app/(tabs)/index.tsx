@@ -1,70 +1,119 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { Image, StyleSheet, Platform, FlatList } from "react-native";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { ThemedView } from "@/components/ThemedView";
+import FavoriteScreen from "@/components/favorite/FavoriteScreen";
+import HimnoItem from "@/components/himno/HimnoItem";
+import HimnoSearch from "@/components/himno/HimnoSearch";
+import Colors from "@/res/colors";
+import { useEffect, useState } from "react";
+import { songs } from "@/res/letters";
+import Storage from "@/libs/storage";
+import { removeAccents } from "@/res/removeAccents";
+import { Songs } from "@/types/types";
 
-export default function HomeScreen() {
+export default function HomeScreen(props: { navigation: any }) {
+  const data = songs;
+
+  const { navigation } = props;
+  const [dataSearch, setDataSearch] = useState(songs);
+  const [noFavoritesData, setNoFavoriteData] = useState<Songs[]>(songs);
+  const [favorites, setFavorites] = useState([] as any);
+  const [modeSearch, setModeSearch] = useState(false);
+
+  const getHimnos = async () => {
+    try {
+      const allKeys = await Storage.instance.getAllKeys();
+      const keys = allKeys.filter((key: string | string[]) => key.includes("favorite-"));
+      const favs = await Storage.instance.multiGet(keys);
+      const cFavorites = favs.map((fav: string[]) => JSON.parse(fav[1]));
+
+      const dataNotFavorite = data.filter(himnoItem => {
+        const himno = cFavorites.filter((itemFav: { id: string }) => {
+          return itemFav.id === himnoItem.id;
+        });
+
+        return himno.length ? false : true;
+      });
+      setFavorites(cFavorites);
+      setNoFavoriteData(dataNotFavorite);
+    } catch (error) {
+      console.log("Get Favorites Err", error);
+    }
+  };
+
+  const handlePress = (himno: Songs) => {
+    props.navigation.navigate("himno", { himno });
+    setModeSearch(false);
+  };
+
+  const handleSearch = (query: string) => {
+    query && !modeSearch && setModeSearch(true);
+    !query && setModeSearch(false);
+
+    const HimnosFiltered = data.filter(himno => {
+      return (
+        removeAccents(himno.title_es).toLowerCase().includes(removeAccents(query).toLowerCase()) ||
+        removeAccents(himno.description_es).toLowerCase().includes(removeAccents(query).toLowerCase())
+      );
+    });
+
+    setDataSearch(HimnosFiltered);
+
+    !query && getHimnos();
+  };
+
+  useEffect(() => {
+    // navigation.setOptions({
+    //   title: titleApp,
+    //   headerTitleStyle: {
+    //     fontWeight: 'bold',
+    //     textTransform: 'uppercase',
+    //     fontSize: responsive(23, 20),
+    //   },
+    // });
+    // const unsubscribe = navigation.addListener('focus', () => getHimnos());
+    // return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // useEffect(() => {
+  //   const unsubscribe = navigation.addListener('focus', () => getHimnos());
+  //   return () => {
+  //     unsubscribe;
+  //   };
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [navigation]);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Himnario!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <ThemedView style={styles.container}>
+      <HimnoSearch onChange={handleSearch} modeSearch={modeSearch} />
+
+      <FlatList
+        style={styles.contentItems}
+        data={!modeSearch ? noFavoritesData : dataSearch}
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item, index }) => (
+          <ThemedView>
+            {!modeSearch && index === 0 && <FavoriteScreen navigation={navigation} favorites={favorites} />}
+
+            <HimnoItem key={item.id} item={item} onPress={() => handlePress(item)} />
+          </ThemedView>
+        )}
+      />
+
+      {!noFavoritesData.length && <FavoriteScreen navigation={navigation} favorites={favorites} />}
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: Colors.bkgWhite,
+    paddingLeft: 12,
+    paddingRight: 12,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  contentItems: {
+    paddingTop: 12,
   },
 });
