@@ -32,6 +32,24 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="himnos"
+        options={{
+          title: 'himnos',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'code-slash' : 'code-slash-outline'} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="himno"
+        options={{
+          title: 'himno',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'code-slash' : 'code-slash-outline'} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
