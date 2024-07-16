@@ -1,5 +1,5 @@
 import { Link, Stack, useNavigation, useRouter } from "expo-router";
-import { StyleSheet, Text, FlatList } from "react-native";
+import { StyleSheet, Text, FlatList, View } from "react-native";
 
 import { ThemedView } from "@/components/ThemedView";
 import FavoriteScreen from "@/components/favorite/FavoriteScreen";
@@ -11,6 +11,8 @@ import { songs } from "@/res/letters";
 import Storage from "@/libs/storage";
 import { removeAccents } from "@/res/removeAccents";
 import { Songs } from "@/types/types";
+import { responsive, widthScreen } from "@/res/responsive";
+import { titleApp } from "@/res/constant";
 
 export default function HimnosScreen(props: { navigation: any }) {
   const data = songs;
@@ -74,16 +76,16 @@ export default function HimnosScreen(props: { navigation: any }) {
   };
 
   useEffect(() => {
-    // navigation.setOptions({
-    //   title: titleApp,
-    //   headerTitleStyle: {
-    //     fontWeight: 'bold',
-    //     textTransform: 'uppercase',
-    //     fontSize: responsive(23, 20),
-    //   },
-    // });
-    // const unsubscribe = navigation.addListener('focus', () => getHimnos());
-    // return unsubscribe;
+    navigation.setOptions({
+      title: titleApp,
+      headerTitleStyle: {
+        fontWeight: "bold",
+        textTransform: "uppercase",
+        fontSize: responsive(23, 20),
+      },
+    });
+    const unsubscribe = navigation.addListener("focus", () => getHimnos());
+    return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -96,22 +98,7 @@ export default function HimnosScreen(props: { navigation: any }) {
   // }, [navigation]);
 
   return (
-    <ThemedView style={styles.container}>
-      <Stack.Screen
-        options={{
-          title: "My home",
-          headerStyle: { backgroundColor: "#f4511e" },
-          headerTintColor: "#fff",
-          headerTitleStyle: {
-            fontWeight: "bold",
-          },
-
-          headerTitle: props => <Text>Canticos</Text>,
-        }}
-      />
-
-      <Link href={{ pathname: "himno", params: { name: "Bacon" } }}>Go to Details</Link>
-
+    <View style={styles.container}>
       <HimnoSearch onChange={handleSearch} modeSearch={modeSearch} />
 
       <FlatList
@@ -119,24 +106,24 @@ export default function HimnosScreen(props: { navigation: any }) {
         data={!modeSearch ? noFavoritesData : dataSearch}
         showsVerticalScrollIndicator={false}
         renderItem={({ item, index }) => (
-          <ThemedView>
+          <View>
             {!modeSearch && index === 0 && <FavoriteScreen navigation={navigation} favorites={favorites} />}
 
             <HimnoItem key={item.id} item={item} onPress={() => handlePress(item)} />
-          </ThemedView>
+          </View>
         )}
       />
 
       {!noFavoritesData.length && <FavoriteScreen navigation={navigation} favorites={favorites} />}
-    </ThemedView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    // alignItems: "center",
+    // justifyContent: "center",
     backgroundColor: Colors.bkgWhite,
     paddingLeft: 12,
     paddingRight: 12,
